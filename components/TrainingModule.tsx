@@ -8,6 +8,7 @@ import { audio } from "../lib/audio";
 import { vocabularyQuestions, pictureCompletionQuestions, similaritiesQuestions, comprehensionQuestions, logicQuestions, mathQuestions, puzzleQuestions, matrixReasoningQuestions, informationQuestions, patternQuestions } from '../lib/questions';
 import { visualPuzzleQuestions, spatialQuestions } from '../lib/spatialQuestions';
 import VisualPuzzle from './VisualPuzzle';
+import BlockDesign from './BlockDesign';
 import { toPng } from 'html-to-image';
 import { Share2, Download } from 'lucide-react';
 import NeonBackground from "./NeonBackground";
@@ -77,6 +78,21 @@ export default function TrainingModule({
   const [isSaving, setIsSaving] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
   const prevLevel = useRef(useStore.getState().level);
+
+  
+  const copyResults = () => {
+    let text = `IQトレーニング+ 結果\nスコア: ${score} / ${localQuestionCount}\n\n`;
+    history.forEach((h, i) => {
+      text += `Q${i + 1}: ${h.question}\n`;
+      text += `あなたの回答: ${h.userAnswer} ${h.isCorrect ? '✅' : '❌'}\n`;
+      if (!h.isCorrect) text += `正解: ${h.correctAnswer}\n`;
+      if (h.explanation) text += `解説: ${h.explanation}\n`;
+      text += `\n`;
+    });
+    navigator.clipboard.writeText(text).then(() => {
+      alert('結果をコピーしました！');
+    });
+  };
 
   const handleSaveImage = async () => {
     if (!resultRef.current) return;
@@ -828,6 +844,13 @@ export default function TrainingModule({
                           {questionData.target}
                         </div>
                       )}
+                    
+                    {currentGameId === 'block-design' && questionData.target && (
+                      <BlockDesign
+                        target={questionData.target}
+                        onComplete={(isCorrect) => handleAnswer(isCorrect ? questionData.target : "incorrect")}
+                      />
+                    )}
                     {currentGameId === 'visual-puzzle' ? (
                       <div className="w-full flex flex-col items-center">
                         <VisualPuzzle 
