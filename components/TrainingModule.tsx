@@ -554,26 +554,10 @@ export default function TrainingModule({
   const finishGame = () => {
     setGameState("finished");
         
-    const appId = "1055088369869282145";
-    const affiliateId = "3d94ea21.0d257908.3d94ea22.0ed11c6e";
-    const searchKeyword = "脳トレ パズル";
-    const apiUrl = `https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706?applicationId=${appId}&keyword=${encodeURIComponent(searchKeyword)}&hits=10&format=json`;
-    
-    fetch(apiUrl)
+    fetch('/api/rakuten?keyword=' + encodeURIComponent('脳トレ'))
       .then(res => res.json())
       .then(data => {
-        if (data.Items && data.Items.length > 0) {
-          const items = data.Items;
-          const item = items[Math.floor(Math.random() * items.length)].Item;
-          const productUrl = item.itemUrl.split("?")[0];
-          const affiliateLink = `https://hb.afl.rakuten.co.jp/hgc/${affiliateId}/?pc=${encodeURIComponent(productUrl)}`;
-          setRakutenItem({
-            name: item.itemName,
-            price: item.itemPrice,
-            image: item.mediumImageUrls[0]?.imageUrl || item.smallImageUrls[0]?.imageUrl,
-            url: affiliateLink
-          });
-        }
+        if (!data.error) setRakutenItem(data);
       })
       .catch(console.error);
 
@@ -745,7 +729,7 @@ export default function TrainingModule({
                 START
               </button>
             </div>
-          )}
+                      )}
 
           {gameState === "playing" && (
             <div className="animate-in fade-in duration-300">
@@ -807,9 +791,9 @@ export default function TrainingModule({
                     <div className="h-40 flex items-center justify-center text-slate-400">
                       準備中...
                     </div>
-                  )}
+                      )}
                 </div>
-              )}
+                      )}
 
               {currentGameId === "arithmetic" && questionData && (
                 <div className="flex flex-col gap-8 animate-in zoom-in">
@@ -835,7 +819,7 @@ export default function TrainingModule({
                     </button>
                   </div>
                 </div>
-              )}
+                      )}
 
               {currentGameId === "symbol-search" && questionData && (
                 <div className="flex flex-col gap-8 animate-in fade-in">
@@ -857,7 +841,7 @@ export default function TrainingModule({
                     ))}
                   </div>
                 </div>
-              )}
+                      )}
 
               {!currentGameId.startsWith("digit-span") &&
                 currentGameId !== "arithmetic" &&
@@ -880,7 +864,7 @@ export default function TrainingModule({
                           </div>
                         ))}
                       </div>
-                    )}
+                      )}
                     {currentGameId === "figure-weights" &&
                       questionData.left && (
                         <div className="flex flex-col items-center gap-6 my-4 w-full">
@@ -947,7 +931,7 @@ export default function TrainingModule({
                               決定
                             </button>
                           </div>
-                        )}
+                      )}
                       </div>
                     ) : questionData.options && currentGameId !== 'block-design' ? (
                         <div className="flex flex-wrap justify-center gap-4 mt-8">
@@ -965,8 +949,8 @@ export default function TrainingModule({
                             </button>
                           ))}
                         </div>
-                      ) : (
-                        <div className="flex flex-col gap-4 mt-8 w-full max-w-md">
+                      ) : currentGameId !== 'block-design' ? (
+                                                <div className={`flex flex-col gap-4 mt-8 w-full max-w-md ${currentGameId === 'block-design' ? 'hidden' : ''}`}>
                           <input
                             type="text"
                             autoFocus
@@ -983,13 +967,13 @@ export default function TrainingModule({
                             決定
                           </button>
                         </div>
-                      )}
+                      ) : null}
                   </div>
-                )}
+                      )}
 
 
               </div>
-            )}
+                      )}
           {gameState === "finished" && (
             <div className="animate-in slide-in-from-bottom-10 duration-500 w-full flex flex-col items-center">
               <div ref={resultRef} className="w-full bg-slate-900/80 p-8 rounded-3xl border border-cyan-500/30 mb-8 flex flex-col items-center">
@@ -1002,7 +986,7 @@ export default function TrainingModule({
                       🎉 LEVEL UP! (Lv.{level}) 🎉
                     </div>
                   </div>
-                )}
+                      )}
                 <div className="text-7xl font-black neon-text-pink mb-10">
                   {score} <span className="text-3xl text-slate-400">/ {questionCount}</span>
                 </div>
@@ -1026,23 +1010,23 @@ export default function TrainingModule({
                               <span className="text-pink-400">正解例:</span>
                               <span className="text-cyan-400 font-bold">{h.correctAnswer}</span>
                             </div>
-                          )}
+                      )}
                         </div>
                         {h.svg && (
                           <div className="w-full flex justify-center my-4 bg-white/5 p-4 rounded-xl border border-white/10">
                             <div className="w-32 h-32 text-cyan-400" dangerouslySetInnerHTML={{ __html: h.svg }} />
                           </div>
-                        )}
+                      )}
                         {h.explanation && (
                           <div className="text-sm text-slate-300 bg-white/5 p-4 rounded-xl mt-3 border border-white/10 leading-relaxed">
                             <span className="mr-2">💡</span>
                             {h.explanation}
                           </div>
-                        )}
+                      )}
                       </div>
                     ))}
                   </div>
-                )}
+                      )}
               </div>
                                 <div className="flex flex-wrap justify-center gap-4 mt-8 w-full">
                   <button onClick={copyResults} className="flex items-center gap-2 px-6 py-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 transition-colors text-white font-bold">
@@ -1075,7 +1059,7 @@ export default function TrainingModule({
                       </div>
                     </a>
                   </div>
-                )}
+                      )}
               <button
                 onClick={onComplete}
                 className="px-10 py-5 rounded-full bg-[rgba(0,255,255,0.1)] hover:bg-[rgba(0,255,255,0.2)] border-2 border-cyan-400 transition-all text-xl font-bold text-white shadow-[0_0_20px_rgba(0,243,255,0.3)] mt-4"
@@ -1083,7 +1067,7 @@ export default function TrainingModule({
                 ホームへ戻る
               </button>
             </div>
-          )}
+                      )}
         </div>
       </div>
     </div>
