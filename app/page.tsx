@@ -104,7 +104,7 @@ export default function Home() {
     <main className="min-h-screen relative font-sans">
       <NeonBackground />
       
-      <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl flex flex-col items-center">
+      <div className="relative z-10 container mx-auto px-4 py-8 max-w-6xl w-full flex flex-col items-center">
         {/* Header */}
         <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
           <div>
@@ -158,7 +158,7 @@ export default function Home() {
              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center shadow-[0_0_15px_rgba(0,243,255,0.5)]">
                <span className="text-3xl font-bold text-black">IQ</span>
              </div>
-             <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-pink-400 whitespace-nowrap">
+             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-pink-400 whitespace-nowrap">
                IQトレーニング+
              </h1>
           </div>

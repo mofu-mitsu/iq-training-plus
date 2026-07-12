@@ -216,64 +216,70 @@ export default function TrainingModule({
       }
       setQuestionData({ a, b, answer, opStr, text: `${a} ${opStr} ${b} = ?` });
     } else if (nextGameId === "block-design") {
+      
       const patterns = [
         {
           text: "次の模様と同じものを選択してください",
           target: "■□■\n□■□\n■□■",
-          options: ["■□■\n□■□\n■□■", "□■□\n■□■\n□■□", "■■■\n□□□\n■■■"],
-          answer: "■□■\n□■□\n■□■",
           explanation: "角が塗りつぶされたX字の模様です。",
         },
         {
           text: "次の模様と同じものを選択してください",
           target: "■■□\n■□□\n□□□",
-          options: ["■■□\n■□□\n□□□", "□■■\n□□■\n□□□", "■□□\n■■□\n□□□"],
-          answer: "■■□\n■□□\n□□□",
           explanation: "左上のL字型の模様です。",
         },
         {
           text: "次の模様と同じものを選択してください",
           target: "□■□\n■■■\n□■□",
-          options: ["■□■\n□■□\n■□■", "□■□\n■■■\n□■□", "■■■\n■□■\n■■■"],
-          answer: "□■□\n■■■\n□■□",
-          explanation: "十字型の模様です。",
+          explanation: "十字の模様です。",
         },
         {
           text: "次の模様と同じものを選択してください",
           target: "■■■\n■□■\n■■■",
-          options: ["■■■\n■□■\n■■■", "□□□\n□■□\n□□□", "■□■\n□■□\n■□■"],
-          answer: "■■■\n■□■\n■■■",
-          explanation: "中央が空いた四角い枠の模様です。",
+          explanation: "真ん中だけが空いた四角い模様です。",
         },
         {
           text: "次の模様と同じものを選択してください",
           target: "□□■\n□■□\n■□□",
-          options: ["□□■\n□■□\n■□□", "■□□\n□■□\n□□■", "■□■\n□■□\n■□■"],
-          answer: "□□■\n□■□\n■□□",
           explanation: "右上から左下への斜め線の模様です。",
         },
         {
           text: "次の模様と同じものを選択してください",
           target: "■□□\n■■□\n■■■",
-          options: ["■□□\n■■□\n■■■", "□□■\n□■■\n■■■", "■■■\n■■□\n■□□"],
-          answer: "■□□\n■■□\n■■■",
-          explanation: "左下の階段状の模様です。",
+          explanation: "左下が塗りつぶされた階段状の模様です。",
         },
         {
           text: "次の模様と同じものを選択してください",
           target: "□■□\n□■□\n□■□",
-          options: ["□■□\n□■□\n□■□", "■■■\n□□□\n■■■", "□□□\n■■■\n□□□"],
-          answer: "□■□\n□■□\n□■□",
-          explanation: "中央の縦1列の模様です。",
+          explanation: "中央の縦線の模様です。",
         },
         {
           text: "次の模様と同じものを選択してください",
           target: "■■■\n□□□\n■■■",
-          options: ["■■■\n□□□\n■■■", "□■□\n□■□\n□■□", "■□■\n■□■\n■□■"],
-          answer: "■■■\n□□□\n■■■",
-          explanation: "上下の横行の模様です。",
+          explanation: "上下の横線の模様です。",
         },
+        {
+          text: "次の模様と同じものを選択してください",
+          target: "■■■\n□■□\n□□□",
+          explanation: "上が塗りつぶされたT字の模様です。",
+        },
+        {
+          text: "次の模様と同じものを選択してください",
+          target: "□□■\n□■■\n■■■",
+          explanation: "右下が塗りつぶされた階段状の模様です。",
+        },
+        {
+          text: "次の模様と同じものを選択してください",
+          target: "■□■\n■■■\n■□■",
+          explanation: "左右の真ん中が空いたH字の模様です。",
+        },
+        {
+          text: "次の模様と同じものを選択してください",
+          target: "□■□\n■□■\n□■□",
+          explanation: "ひし形の模様です。",
+        }
       ];
+
       setQuestionData(patterns[Math.floor(Math.random() * patterns.length)]);
     } else if (nextGameId === "vocabulary") {
       setQuestionData(vocabularyQuestions[Math.floor(Math.random() * vocabularyQuestions.length)]);
@@ -882,7 +888,7 @@ export default function TrainingModule({
                           </div>
                         )}
                       </div>
-                    ) : questionData.options ? (
+                    ) : questionData.options && currentGameId !== 'block-design' ? (
                         <div className="flex flex-wrap justify-center gap-4 mt-8">
                           {questionData.options.map((opt: string, i: number) => (
                             <button
@@ -977,7 +983,23 @@ export default function TrainingModule({
                   </div>
                 )}
               </div>
+                {rakutenItem && (
+                  <div className="mt-8 w-full max-w-md bg-white/5 border border-cyan-500/20 rounded-xl p-4 hover:bg-white/10 transition-colors mx-auto mb-4">
+                    <p className="text-xs text-slate-400 mb-2 font-bold text-center">おすすめの脳トレグッズ</p>
+                    <a href={rakutenItem.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4">
+                      {rakutenItem.image && <img src={rakutenItem.image} alt="product" className="w-16 h-16 object-cover rounded-lg" />}
+                      <div className="flex-1 overflow-hidden">
+                        <p className="text-sm text-cyan-100 font-medium truncate">{rakutenItem.name}</p>
+                        <p className="text-pink-400 font-bold mt-1">¥{rakutenItem.price.toLocaleString()}</p>
+                      </div>
+                    </a>
+                  </div>
+                )}
+
                 <div className="flex flex-wrap justify-center gap-4 mt-8 w-full">
+                  <button onClick={copyResults} className="flex items-center gap-2 px-6 py-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 transition-colors text-white font-bold">
+                    📋 結果詳細をコピー
+                  </button>
                   <button
                     onClick={handleSaveImage}
                     className="flex items-center gap-2 px-6 py-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 transition-colors text-white font-bold"
