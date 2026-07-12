@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
-import { getFirestore, collection, addDoc, query, orderBy, getDocs, limit, serverTimestamp, where } from "firebase/firestore";
+import { getFirestore, collection, addDoc, query, orderBy, getDocs, limit, serverTimestamp, where, doc, setDoc, getDoc } from "firebase/firestore";
 
 import config from "../firebase-applet-config.json";
 
@@ -58,3 +58,23 @@ export const getUserHistory = async (userId: string) => {
 };
 
 export { auth, db };
+
+export const saveUserData = async (userId: string, data: any) => {
+  try {
+    await setDoc(doc(db, "users", userId), data, { merge: true });
+  } catch (e) {
+    console.error("Error saving user data: ", e);
+  }
+};
+
+export const getUserData = async (userId: string) => {
+  try {
+    const docSnap = await getDoc(doc(db, "users", userId));
+    if (docSnap.exists()) {
+      return docSnap.data();
+    }
+  } catch (e) {
+    console.error("Error getting user data: ", e);
+  }
+  return null;
+};

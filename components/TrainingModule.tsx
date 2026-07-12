@@ -277,6 +277,46 @@ export default function TrainingModule({
           text: "次の模様と同じものを選択してください",
           target: "□■□\n■□■\n□■□",
           explanation: "ひし形の模様です。",
+        },
+        {
+          text: "次の模様と同じものを選択してください",
+          target: "■□■\n■■■\n■□■",
+          explanation: "両端が縦に繋がったH字の模様です。",
+        },
+        {
+          text: "次の模様と同じものを選択してください",
+          target: "□■□\n■□■\n□■□",
+          explanation: "ひし形の模様です。",
+        },
+        {
+          text: "次の模様と同じものを選択してください",
+          target: "■■■\n■□□\n■■■",
+          explanation: "左側が開いたコの字の模様です。",
+        },
+        {
+          text: "次の模様と同じものを選択してください",
+          target: "■■■\n□□■\n■■■",
+          explanation: "右側が開いたコの字の模様です。",
+        },
+        {
+          text: "次の模様と同じものを選択してください",
+          target: "■■■\n■□■\n■■■",
+          explanation: "ロの字型の模様です。",
+        },
+        {
+          text: "次の模様と同じものを選択してください",
+          target: "□□□\n■■■\n□□□",
+          explanation: "中央の横線の模様です。",
+        },
+        {
+          text: "次の模様と同じものを選択してください",
+          target: "■□□\n■□□\n■□□",
+          explanation: "左端の縦線の模様です。",
+        },
+        {
+          text: "次の模様と同じものを選択してください",
+          target: "□□■\n□□■\n□□■",
+          explanation: "右端の縦線の模様です。",
         }
       ];
 
@@ -513,9 +553,30 @@ export default function TrainingModule({
 
   const finishGame = () => {
     setGameState("finished");
-        fetch('/api/rakuten?keyword=' + encodeURIComponent('脳トレ')).then(res => res.json()).then(data => {
-          if (!data.error) setRakutenItem(data);
-        }).catch(console.error);
+        
+    const appId = "1055088369869282145";
+    const affiliateId = "3d94ea21.0d257908.3d94ea22.0ed11c6e";
+    const searchKeyword = "脳トレ パズル";
+    const apiUrl = `https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706?applicationId=${appId}&keyword=${encodeURIComponent(searchKeyword)}&hits=10&format=json`;
+    
+    fetch(apiUrl)
+      .then(res => res.json())
+      .then(data => {
+        if (data.Items && data.Items.length > 0) {
+          const items = data.Items;
+          const item = items[Math.floor(Math.random() * items.length)].Item;
+          const productUrl = item.itemUrl.split("?")[0];
+          const affiliateLink = `https://hb.afl.rakuten.co.jp/hgc/${affiliateId}/?pc=${encodeURIComponent(productUrl)}`;
+          setRakutenItem({
+            name: item.itemName,
+            price: item.itemPrice,
+            image: item.mediumImageUrls[0]?.imageUrl || item.smallImageUrls[0]?.imageUrl,
+            url: affiliateLink
+          });
+        }
+      })
+      .catch(console.error);
+
     addXp(score * 20);
     if (gameId !== "mix") {
       updateHighScore(gameId, score);
@@ -857,7 +918,7 @@ export default function TrainingModule({
                         onComplete={(isCorrect) => handleAnswer(isCorrect ? questionData.target : "incorrect")}
                       />
                     )}
-                    {currentGameId === 'visual-puzzle' ? (
+                    {currentGameId === 'block-design' ? null : currentGameId === 'visual-puzzle' ? (
                       <div className="w-full flex flex-col items-center">
                         <VisualPuzzle 
                           pieces={questionData.pieces}
@@ -983,20 +1044,7 @@ export default function TrainingModule({
                   </div>
                 )}
               </div>
-                {rakutenItem && (
-                  <div className="mt-8 w-full max-w-md bg-white/5 border border-cyan-500/20 rounded-xl p-4 hover:bg-white/10 transition-colors mx-auto mb-4">
-                    <p className="text-xs text-slate-400 mb-2 font-bold text-center">おすすめの脳トレグッズ</p>
-                    <a href={rakutenItem.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4">
-                      {rakutenItem.image && <img src={rakutenItem.image} alt="product" className="w-16 h-16 object-cover rounded-lg" />}
-                      <div className="flex-1 overflow-hidden">
-                        <p className="text-sm text-cyan-100 font-medium truncate">{rakutenItem.name}</p>
-                        <p className="text-pink-400 font-bold mt-1">¥{rakutenItem.price.toLocaleString()}</p>
-                      </div>
-                    </a>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap justify-center gap-4 mt-8 w-full">
+                                <div className="flex flex-wrap justify-center gap-4 mt-8 w-full">
                   <button onClick={copyResults} className="flex items-center gap-2 px-6 py-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 transition-colors text-white font-bold">
                     📋 結果詳細をコピー
                   </button>
@@ -1015,6 +1063,19 @@ export default function TrainingModule({
                     結果を共有
                   </button>
                 </div>
+
+                {rakutenItem && (
+                  <div className="mt-12 w-full max-w-md bg-white/5 border border-pink-500/20 rounded-xl p-4 hover:bg-white/10 transition-colors mx-auto shadow-[0_0_15px_rgba(255,0,255,0.1)]">
+                    <p className="text-xs text-pink-400 mb-3 font-bold text-center">🏆 おすすめの脳トレグッズ</p>
+                    <a href={rakutenItem.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4">
+                      {rakutenItem.image && <img src={rakutenItem.image} alt="product" className="w-20 h-20 object-cover rounded-lg border border-white/10" />}
+                      <div className="flex-1 overflow-hidden">
+                        <p className="text-sm text-white font-medium truncate">{rakutenItem.name}</p>
+                        <p className="text-cyan-400 font-bold mt-2">¥{rakutenItem.price.toLocaleString()}</p>
+                      </div>
+                    </a>
+                  </div>
+                )}
               <button
                 onClick={onComplete}
                 className="px-10 py-5 rounded-full bg-[rgba(0,255,255,0.1)] hover:bg-[rgba(0,255,255,0.2)] border-2 border-cyan-400 transition-all text-xl font-bold text-white shadow-[0_0_20px_rgba(0,243,255,0.3)] mt-4"

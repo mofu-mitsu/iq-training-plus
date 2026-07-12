@@ -5,7 +5,7 @@ import NeonBackground from '../components/NeonBackground';
 import { useStore } from '../lib/store';
 import TrainingModule from '../components/TrainingModule';
 import { audio } from '../lib/audio';
-import { auth, loginWithGoogle, logout } from '../lib/firebase';
+import { auth, loginWithGoogle, logout, getUserData, saveUserData } from '../lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
 import Pokedex from '../components/Pokedex';
@@ -21,11 +21,37 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        const data = await getUserData(currentUser.uid);
+        if (data) {
+          useStore.setState({
+            xp: data.xp !== undefined ? data.xp : useStore.getState().xp,
+            level: data.level !== undefined ? data.level : useStore.getState().level,
+            dailyStreak: data.dailyStreak !== undefined ? data.dailyStreak : useStore.getState().dailyStreak,
+            highScores: data.highScores !== undefined ? data.highScores : useStore.getState().highScores,
+          });
+        }
+      }
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    // Sync store changes to Firebase
+    const unsubscribe = useStore.subscribe((state) => {
+      if (user) {
+        saveUserData(user.uid, {
+          xp: state.xp,
+          level: state.level,
+          dailyStreak: state.dailyStreak,
+          highScores: state.highScores,
+        });
+      }
+    });
+    return () => unsubscribe();
+  }, [user]);
 
   useEffect(() => {
     // 簡易的なログインスタンプ処理
@@ -114,7 +140,13 @@ export default function Home() {
               <button onClick={logout} className="text-xs text-white bg-red-500/80 px-3 py-1.5 rounded-full hover:bg-red-500 transition-colors font-bold">ログアウト</button>
             </div>
           ) : (
-            <button onClick={loginWithGoogle} className="flex items-center gap-2 text-sm font-bold text-black bg-gradient-to-r from-cyan-400 to-cyan-300 px-6 py-2.5 rounded-full hover:scale-105 hover:shadow-[0_0_20px_rgba(0,243,255,0.6)] transition-all shadow-[0_0_10px_rgba(0,243,255,0.3)]">ログイン (記録保存)</button>
+            <button onClick={() => loginWithGoogle().catch(e => {
+              if (e.code === 'auth/unauthorized-domain') {
+                alert('Firebaseの「Authorized domains」にこのドメイン (iq-training-plus.vercel.app) を追加してください！');
+              } else {
+                console.error(e);
+              }
+            })} className="flex items-center gap-2 text-sm font-bold text-black bg-gradient-to-r from-cyan-400 to-cyan-300 px-6 py-2.5 rounded-full hover:scale-105 hover:shadow-[0_0_20px_rgba(0,243,255,0.6)] transition-all shadow-[0_0_10px_rgba(0,243,255,0.3)]">ログイン (記録保存)</button>
           )}
           </div>
           <div className="flex items-center gap-4">
