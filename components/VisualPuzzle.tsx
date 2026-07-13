@@ -11,6 +11,8 @@ import {
   DragEndEvent,
   DragOverlay,
 } from '@dnd-kit/core';
+// 指の真下にピースを強制吸着させる救世主！
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 
 type VisualPuzzleProps = {
   cols?: number;
@@ -73,7 +75,6 @@ function DroppableSlot({
           onClick={() => onPieceClick(piece)}
           className="w-full h-full flex items-center justify-center cursor-pointer"
         >
-          {/* スロット内に入ったピースはDraggableにせず、タップで戻すか、DragOverlay側で処理する */}
           <DraggablePiece piece={piece} />
         </div>
       )}
@@ -83,15 +84,13 @@ function DroppableSlot({
 
 // --- Main Component ---
 export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 2 }: VisualPuzzleProps) {
-  // 一意なIDを持たせたデータ構造に変換
   const [slots, setSlots] = useState<(PieceData | null)[]>(Array(pieces.length).fill(null));
   const [availablePieces, setAvailablePieces] = useState<PieceData[]>([]);
   const [activePiece, setActivePiece] = useState<PieceData | null>(null);
 
-  // センサーの設定（スマホのタッチ対応のキモ！）
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } }) // スクロールと誤爆しないように
+    useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } })
   );
 
   useEffect(() => {
@@ -102,7 +101,6 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
     setSlots(Array(pieces.length).fill(null));
   }, [pieces]);
 
-  // Tap: 待機エリア -> スロット
   const handlePieceClick = (piece: PieceData) => {
     const emptySlotIndex = slots.findIndex((s) => s === null);
     if (emptySlotIndex !== -1) {
@@ -113,7 +111,6 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
     }
   };
 
-  // Tap: スロット -> 待機エリア
   const handleSlotClick = (piece: PieceData) => {
     const slotIndex = slots.findIndex((s) => s?.id === piece.id);
     if (slotIndex !== -1) {
@@ -134,7 +131,7 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
     const { active, over } = event;
     setActivePiece(null);
 
-    if (!over) return; // ドロップ先がない場合は何もしない
+    if (!over) return;
 
     const activeId = active.id as string;
     const overId = over.id as string;
@@ -142,7 +139,6 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
     const sourceSlotIndex = slots.findIndex((s) => s?.id === activeId);
     const targetSlotIndex = overId.startsWith('slot-') ? parseInt(overId.split('-')[1], 10) : -1;
 
-    // 1. 待機エリア -> スロットへのドロップ
     if (sourceSlotIndex === -1 && targetSlotIndex !== -1) {
       const piece = availablePieces.find((p) => p.id === activeId);
       if (piece) {
@@ -153,11 +149,10 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
         setSlots(newSlots);
 
         const newAvailable = availablePieces.filter((p) => p.id !== activeId);
-        if (targetPiece) newAvailable.push(targetPiece); // すでにスロットにピースがあれば押し出す
+        if (targetPiece) newAvailable.push(targetPiece);
         setAvailablePieces(newAvailable);
       }
     }
-    // 2. スロット -> 別のスロットへの移動（スワップ）
     else if (sourceSlotIndex !== -1 && targetSlotIndex !== -1) {
       if (sourceSlotIndex === targetSlotIndex) return;
       const newSlots = [...slots];
@@ -166,7 +161,6 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
       newSlots[sourceSlotIndex] = temp;
       setSlots(newSlots);
     }
-    // 3. スロット -> 待機エリアへのドロップ
     else if (sourceSlotIndex !== -1 && overId === 'available-area') {
       const piece = slots[sourceSlotIndex];
       if (piece) {
@@ -189,16 +183,17 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
   const isFull = slots.filter((s) => s !== null).length === pieces.length;
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto">
-        <div className="text-lg md:text-xl text-slate-300 font-bold mb-4">
-          下のピースをドラッグ（またはタップ）して、枠にはめ込んで絵を完成させてください。
-        </div>
+    <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto">
+      <div className="text-lg md:text-xl text-slate-300 font-bold mb-4">
+        下のピースをドラッグ（またはタップ）して、枠にはめ込んで絵を完成させてください。
+      </div>
 
+      {/* DndContextの範囲をパズルエリアだけに限定！ */}
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
         {/* Grid Area */}
         <div
           className={`grid gap-1 bg-white/10 p-2 rounded-xl border border-cyan-500/30 ${
@@ -215,7 +210,7 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
           ))}
         </div>
 
-        {/* Available Area (Droppable) */}
+        {/* Available Area */}
         <DroppableArea id="available-area">
           {availablePieces.map((piece) => (
             <DraggablePiece key={piece.id} piece={piece} onClick={() => handlePieceClick(piece)} />
@@ -227,33 +222,34 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
           )}
         </DroppableArea>
 
-        <button
-          onClick={handleDecide}
-          disabled={!isFull}
-          className={`px-10 py-4 rounded-xl text-white font-bold text-xl transition-all shadow-[0_0_15px_#f0f] ${
-            isFull ? 'bg-pink-500 hover:bg-pink-400' : 'bg-slate-700 opacity-50 cursor-not-allowed shadow-none'
-          }`}
-        >
-          決定
-        </button>
-      </div>
+        {/* modifiers={[snapCenterToCursor]} を追加して指の真下に固定！ */}
+        <DragOverlay modifiers={[snapCenterToCursor]} dropAnimation={null}>
+          {activePiece ? (
+            <div className="w-24 h-24 bg-black/80 border-2 border-pink-500 rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(255,0,255,0.6)] rotate-3 scale-110 pointer-events-none">
+              <div
+                className="w-full h-full p-2 text-pink-400 text-4xl font-bold flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-[100%] [&>svg]:max-h-[100%]"
+                dangerouslySetInnerHTML={{ __html: activePiece.content }}
+              />
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
-      {/* ドラッグ中に指/カーソルに追従するオーバーレイ */}
-      <DragOverlay dropAnimation={null}>
-        {activePiece ? (
-          <div className="w-24 h-24 bg-black/80 border-2 border-pink-500 rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(255,0,255,0.6)] rotate-3 scale-110">
-            <div
-              className="w-full h-full p-2 text-pink-400 text-4xl font-bold flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-[100%] [&>svg]:max-h-[100%]"
-              dangerouslySetInnerHTML={{ __html: activePiece.content }}
-            />
-          </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+      {/* 決定ボタンをDndContextの外側に救出したから、これで確実にタップできる！ */}
+      <button
+        onClick={handleDecide}
+        disabled={!isFull}
+        className={`px-10 py-4 rounded-xl text-white font-bold text-xl transition-all shadow-[0_0_15px_#f0f] ${
+          isFull ? 'bg-pink-500 hover:bg-pink-400 cursor-pointer' : 'bg-slate-700 opacity-50 cursor-not-allowed shadow-none'
+        }`}
+      >
+        決定
+      </button>
+    </div>
   );
 }
 
-// --- Droppable Area (for available pieces) ---
+// --- Droppable Area Component ---
 function DroppableArea({ id, children }: { id: string; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
