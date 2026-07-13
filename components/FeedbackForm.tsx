@@ -14,30 +14,34 @@ export default function FeedbackForm() {
     e.preventDefault();
     if (!feedback.trim()) return;
 
-    const gasUrl = process.env.NEXT_PUBLIC_GAS_URL;
-    if (!gasUrl) {
-      toast.error('送信先の設定 (GAS URL) が見つかりません。');
-      return;
-    }
+    // Hardcoded GAS URL to match TrainingModule
+    const gasUrl = "https://script.google.com/macros/s/AKfycbxJKfKT3_zlZTc_Rg9kRrUj7xqBE21tAbEf98dQyBfpN9QvLZ18p--b9q3TMnUD6wc84Q/exec";
 
     setIsSubmitting(true);
     try {
       const user = auth.currentUser;
       const data = {
-        timestamp: new Date().toISOString(),
-        userId: user ? user.uid : 'anonymous',
-        feedback: feedback,
+        userId: user ? user.uid : 'guest',
+        gameId: 'feedback', // Identify this as a feedback submission
+        score: 0,
+        questionCount: 0,
+        xp: 0,
         level: useStore.getState().level,
-        userAgent: navigator.userAgent
+        history: [
+          {
+            question: "【フィードバック/要望】",
+            userAnswer: feedback,
+            isCorrect: true // Just so it shows a circle or nothing weird
+          }
+        ]
       };
 
-      // GAS expects form data or JSON based on doPost implementation
-      // Using no-cors mode to avoid CORS errors from GAS
+      // Using text/plain and no-cors to avoid CORS errors from GAS
       await fetch(gasUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain',
         },
         body: JSON.stringify(data),
       });
