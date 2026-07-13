@@ -163,13 +163,21 @@ export default function Home() {
               <button onClick={logout} className="text-xs text-white bg-red-500/80 px-3 py-1.5 rounded-full hover:bg-red-500 transition-colors font-bold">ログアウト</button>
             </div>
           ) : (
-            <button onClick={() => loginWithGoogle().catch(e => {
-              if (e.code === 'auth/unauthorized-domain') {
-                alert('Firebaseの「Authorized domains」にこのドメイン (iq-training-plus.vercel.app) を追加してください！');
-              } else {
-                console.error(e);
+            <button onClick={() => {
+              const ua = navigator.userAgent.toLowerCase();
+              if (ua.includes('line') || ua.includes('twitter') || ua.includes('x-web') || ua.includes('instagram') || ua.includes('fbav')) {
+                alert('X（Twitter）やLINEなどのアプリ内ブラウザではGoogleログインができません。\n右上のメニュー等から「ブラウザで開く（Safari/Chrome等）」を選択してからお試しください。');
+                return;
               }
-            })} className="flex items-center gap-2 text-sm font-bold text-black bg-gradient-to-r from-cyan-400 to-cyan-300 px-6 py-2.5 rounded-full hover:scale-105 hover:shadow-[0_0_20px_rgba(0,243,255,0.6)] transition-all shadow-[0_0_10px_rgba(0,243,255,0.3)]">ログイン (記録保存)</button>
+              loginWithGoogle().catch(e => {
+                if (e.code === 'auth/unauthorized-domain') {
+                  alert('Firebaseの「Authorized domains」にこのドメイン (iq-training-plus.vercel.app) を追加してください！');
+                } else {
+                  console.error(e);
+                  alert('ログインエラー: ' + e.message);
+                }
+              })
+            }} className="flex items-center gap-2 text-sm font-bold text-black bg-gradient-to-r from-cyan-400 to-cyan-300 px-6 py-2.5 rounded-full hover:scale-105 hover:shadow-[0_0_20px_rgba(0,243,255,0.6)] transition-all shadow-[0_0_10px_rgba(0,243,255,0.3)]">ログイン (記録保存)</button>
           )}
           </div>
           <div className="flex items-center gap-4">
