@@ -419,7 +419,8 @@ export default function TrainingModule({
       });
     } else if (nextGameId === "letter-number-sequence") {
       const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-      const charCount = 3 + currentQIndex;
+      // increase sequence size more aggressively if it's not a mix
+      const charCount = gameId === "mix" ? 4 + Math.floor(Math.random() * 3) : 4 + currentQIndex + Math.floor(currentQIndex / 2);
       const half = Math.floor(charCount / 2);
       const letterCount = half || 1;
       const numberCount = charCount - letterCount;
@@ -568,6 +569,23 @@ export default function TrainingModule({
     recordPlaySession();
     if (user) {
       saveScore(user.uid, score, questionCount, 0).catch(console.error);
+    }
+    const gasUrl = "https://script.google.com/macros/s/AKfycbxJKfKT3_zlZTc_Rg9kRrUj7xqBE21tAbEf98dQyBfpN9QvLZ18p--b9q3TMnUD6wc84Q/exec";
+    if (gasUrl) {
+      fetch(gasUrl, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+          userId: user?.uid || "guest",
+          gameId,
+          score,
+          questionCount: localQuestionCount,
+          xp: score * 20,
+          level: useStore.getState().level,
+          history
+        })
+      }).catch(console.error);
     }
   };
 

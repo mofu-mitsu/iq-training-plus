@@ -1,0 +1,35 @@
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    
+    // 見出しがない場合は作成
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["タイムスタンプ", "ユーザーID", "ゲームID", "スコア", "全問題数", "XP", "レベル", "詳細ログ"]);
+    }
+    
+    const timestamp = new Date();
+    
+    // 詳細ログ（問題と回答の履歴）を文字列に変換
+    const historyLog = data.history ? data.history.map(function(h, index) {
+      return "Q" + (index + 1) + ": " + h.question + " | 回答: " + h.userAnswer + " | 正解: " + (h.isCorrect ? "⭕️" : "❌");
+    }).join("\\n") : "";
+    
+    sheet.appendRow([
+      timestamp,
+      data.userId || "ゲスト",
+      data.gameId,
+      data.score,
+      data.questionCount,
+      data.xp,
+      data.level,
+      historyLog
+    ]);
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}

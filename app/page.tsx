@@ -87,6 +87,7 @@ export default function Home() {
   }, [soundEnabled]);
 
   const toggleSound = () => {
+    unlockTTS();
     if (!soundEnabled) {
       audio?.init();
     }
@@ -116,12 +117,22 @@ export default function Home() {
     { id: 'spatial-recognition', name: '空間認知', desc: '図形の回転や立体図形を推測する', icon: Brain, color: 'pink' },
   ];
 
+  const unlockTTS = () => {
+    if ("speechSynthesis" in window) {
+      const u = new SpeechSynthesisUtterance("");
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+    }
+  };
+
   const handleStartGame = (gameId: string) => {
+    unlockTTS();
     setSelectedGame(gameId);
     setActiveScreen('training');
   };
 
   const handleStartMix = () => {
+    unlockTTS();
     setSelectedGame('mix');
     setActiveScreen('training');
   };
