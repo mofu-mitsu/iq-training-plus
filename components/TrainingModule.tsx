@@ -14,6 +14,8 @@ import { Share2, Download, CheckCircle2 } from 'lucide-react';
 import NeonBackground from "./NeonBackground";
 import toast from 'react-hot-toast';
 
+import FeedbackForm from './FeedbackForm';
+
 type TrainingProps = {
   gameId: string;
   questionCount?: number;
@@ -1094,6 +1096,7 @@ export default function TrainingModule({
                     </a>
                   </div>
                       )}
+              <FeedbackForm />
               <button
                 onClick={onComplete}
                 className="px-10 py-5 rounded-full bg-[rgba(0,255,255,0.1)] hover:bg-[rgba(0,255,255,0.2)] border-2 border-cyan-400 transition-all text-xl font-bold text-white shadow-[0_0_20px_rgba(0,243,255,0.3)] mt-4"
