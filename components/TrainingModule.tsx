@@ -10,8 +10,9 @@ import { visualPuzzleQuestions, spatialQuestions } from '../lib/spatialQuestions
 import VisualPuzzle from './VisualPuzzle';
 import BlockDesign from './BlockDesign';
 import { toPng } from 'html-to-image';
-import { Share2, Download } from 'lucide-react';
+import { Share2, Download, CheckCircle2 } from 'lucide-react';
 import NeonBackground from "./NeonBackground";
+import toast from 'react-hot-toast';
 
 type TrainingProps = {
   gameId: string;
@@ -76,6 +77,7 @@ export default function TrainingModule({
   const [localQuestionCount, setLocalQuestionCount] = useState(questionCount);
   const [rakutenItem, setRakutenItem] = useState<{name: string, url: string, image: string, price: number} | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
   const prevLevel = useRef(useStore.getState().level);
 
@@ -90,7 +92,7 @@ export default function TrainingModule({
       text += `\n`;
     });
     navigator.clipboard.writeText(text).then(() => {
-      alert('結果をコピーしました！');
+      toast.success('結果をコピーしました！');
     });
   };
 
@@ -106,6 +108,7 @@ export default function TrainingModule({
       a.href = image;
       a.download = `wais-training-result-${Date.now()}.png`;
       a.click();
+      setShowSaveModal(true);
     } catch (err) {
       console.error(err);
     } finally {
@@ -126,7 +129,7 @@ export default function TrainingModule({
       }
     } else {
       navigator.clipboard.writeText(text);
-      alert('結果をクリップボードにコピーしました！');
+      toast.success('結果をクリップボードにコピーしました！');
     }
   };
 
@@ -1010,12 +1013,14 @@ export default function TrainingModule({
                   トレーニング終了！
                 </h2>
                 {leveledUp && (
-                  <div className="my-4 animate-bounce bg-pink-500/20 p-4 rounded-2xl border border-pink-500 shadow-[0_0_20px_#f0f]">
-                    <div className="text-3xl font-black text-white drop-shadow-[0_0_10px_#f0f]">
-                      🎉 LEVEL UP! (Lv.{level}) 🎉
+                  <div className={`my-4 ${isSaving ? '' : 'animate-bounce'} rounded-2xl shadow-[0_0_20px_#f0f]`}>
+                    <div className="bg-pink-500/20 p-4 rounded-2xl border border-pink-500 overflow-hidden">
+                      <div className="text-3xl font-black text-white drop-shadow-[0_0_10px_#f0f]">
+                        🎉 LEVEL UP! (Lv.{level}) 🎉
+                      </div>
                     </div>
                   </div>
-                      )}
+                )}
                 <div className="text-7xl font-black neon-text-pink mb-10">
                   {score} <span className="text-3xl text-slate-400">/ {questionCount}</span>
                 </div>
@@ -1096,9 +1101,33 @@ export default function TrainingModule({
                 ホームへ戻る
               </button>
             </div>
-                      )}
+          )}
         </div>
       </div>
+      
+      {showSaveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-cyan-500/30 rounded-2xl p-6 max-w-sm w-full shadow-[0_0_30px_rgba(0,243,255,0.2)] animate-in zoom-in-95 duration-200">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-cyan-500/20 rounded-full flex items-center justify-center mb-4 text-cyan-400">
+                <CheckCircle2 className="w-10 h-10" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">
+                画像を保存しました！
+              </h3>
+              <p className="text-slate-300 text-sm mb-6 leading-relaxed">
+                端末の「写真」や「ギャラリー」アプリで<br/>結果を確認できます。
+              </p>
+              <button 
+                onClick={() => setShowSaveModal(false)}
+                className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-colors border border-slate-700"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

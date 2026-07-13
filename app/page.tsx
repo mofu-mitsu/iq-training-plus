@@ -7,6 +7,7 @@ import TrainingModule from '../components/TrainingModule';
 import { audio } from '../lib/audio';
 import { auth, loginWithGoogle, logout, getUserData, saveUserData } from '../lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import toast from 'react-hot-toast';
 
 import Pokedex from '../components/Pokedex';
 
@@ -19,6 +20,7 @@ export default function Home() {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [showStamp, setShowStamp] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [showInAppBrowserWarning, setShowInAppBrowserWarning] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -166,15 +168,15 @@ export default function Home() {
             <button onClick={() => {
               const ua = navigator.userAgent.toLowerCase();
               if (ua.includes('line') || ua.includes('twitter') || ua.includes('x-web') || ua.includes('instagram') || ua.includes('fbav')) {
-                alert('X（Twitter）やLINEなどのアプリ内ブラウザではGoogleログインができません。\n右上のメニュー等から「ブラウザで開く（Safari/Chrome等）」を選択してからお試しください。');
+                setShowInAppBrowserWarning(true);
                 return;
               }
               loginWithGoogle().catch(e => {
                 if (e.code === 'auth/unauthorized-domain') {
-                  alert('Firebaseの「Authorized domains」にこのドメイン (iq-training-plus.vercel.app) を追加してください！');
+                  toast.error('Firebaseの「Authorized domains」にこのドメインを追加してください！');
                 } else {
                   console.error(e);
-                  alert('ログインエラー: ' + e.message);
+                  toast.error('ログインエラー: ' + e.message);
                 }
               })
             }} className="flex items-center gap-2 text-sm font-bold text-black bg-gradient-to-r from-cyan-400 to-cyan-300 px-6 py-2.5 rounded-full hover:scale-105 hover:shadow-[0_0_20px_rgba(0,243,255,0.6)] transition-all shadow-[0_0_10px_rgba(0,243,255,0.3)]">ログイン (記録保存)</button>
@@ -318,6 +320,28 @@ export default function Home() {
         </a>
       </div>
     </div>
+    
+    {showInAppBrowserWarning && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="bg-slate-900 border border-cyan-500/30 rounded-2xl p-6 max-w-sm w-full shadow-[0_0_30px_rgba(0,243,255,0.2)] animate-in zoom-in-95 duration-200">
+          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <span className="text-xl">⚠️</span> アプリ内ブラウザについて
+          </h3>
+          <p className="text-slate-300 text-sm mb-6 leading-relaxed">
+            X（Twitter）やLINEなどのアプリ内ブラウザではGoogleログインが正常に動作しません。<br/><br/>
+            画面右上などのメニュー（<span className="font-bold">「︙」</span>や<span className="font-bold">「...」</span>）から、<br/>
+            <span className="text-cyan-400 font-bold">「ブラウザで開く（Safari/Chrome等）」</span><br/>
+            を選択してから再度お試しください。
+          </p>
+          <button 
+            onClick={() => setShowInAppBrowserWarning(false)}
+            className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-colors border border-slate-700"
+          >
+            閉じる
+          </button>
+        </div>
+      </div>
+    )}
     </main>
   );
 }
