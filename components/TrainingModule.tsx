@@ -145,6 +145,17 @@ export default function TrainingModule({
     }
   };
 
+  const getRandomUnique = (arr: any[], current: any) => {
+    if (arr.length <= 1) return arr[0];
+    let q;
+    let attempts = 0;
+    do {
+      q = arr[Math.floor(Math.random() * arr.length)];
+      attempts++;
+    } while (current && q.text === current.text && attempts < 10);
+    return q;
+  };
+
   const setupNextQuestion = () => {
     if (currentQIndex >= localQuestionCount) {
       finishGame();
@@ -320,18 +331,18 @@ export default function TrainingModule({
         }
       ];
 
-      setQuestionData(patterns[Math.floor(Math.random() * patterns.length)]);
+      setQuestionData(getRandomUnique(patterns, questionData));
     } else if (nextGameId === "vocabulary") {
-      setQuestionData(vocabularyQuestions[Math.floor(Math.random() * vocabularyQuestions.length)]);
+      setQuestionData(getRandomUnique(vocabularyQuestions, questionData));
     } else if (nextGameId === "similarities") {
-      setQuestionData(similaritiesQuestions[Math.floor(Math.random() * similaritiesQuestions.length)]);
+      setQuestionData(getRandomUnique(similaritiesQuestions, questionData));
     } else if (nextGameId === "comprehension") {
-      setQuestionData(comprehensionQuestions[Math.floor(Math.random() * comprehensionQuestions.length)]);
+      setQuestionData(getRandomUnique(comprehensionQuestions, questionData));
     } else if (nextGameId === "matrix-reasoning") {
-      const q = matrixReasoningQuestions[Math.floor(Math.random() * matrixReasoningQuestions.length)];
+      const q = getRandomUnique(matrixReasoningQuestions, questionData);
       setQuestionData({ text: q.text, options: [...q.options].sort(()=>Math.random()-0.5), answer: q.answer || q.a, explanation: q.explanation });
     } else if (nextGameId === "information") {
-      setQuestionData(informationQuestions[Math.floor(Math.random() * informationQuestions.length)]);
+      setQuestionData(getRandomUnique(informationQuestions, questionData));
     } else if (nextGameId === "symbol-search") {
       const symbols = ["★", "●", "▲", "■", "◆", "♥", "♣", "♠", "✦", "✧", "❂", "❆"];
       const target = symbols[Math.floor(Math.random() * symbols.length)];
@@ -535,7 +546,7 @@ export default function TrainingModule({
     } else if (nextGameId === "visual-puzzle") {
       setQuestionData(visualPuzzleQuestions[Math.floor(Math.random() * visualPuzzleQuestions.length)]);
     } else if (nextGameId === "spatial-recognition") {
-      const q = spatialQuestions[Math.floor(Math.random() * spatialQuestions.length)];
+      const q = getRandomUnique(spatialQuestions, questionData);
       setQuestionData({ text: q.text, svg: q.svg, options: [...q.options], aIndex: q.aIndex !== undefined ? q.aIndex : q.options.indexOf(q.answer), explanation: q.explanation });
     } else {
       setQuestionData({
