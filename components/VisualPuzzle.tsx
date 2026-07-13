@@ -122,7 +122,7 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
                   e.stopPropagation();
                   handleDragStart(e, 'slot', i);
                 }}
-                className="w-full h-full p-2 text-cyan-400 cursor-grab active:cursor-grabbing text-4xl font-bold flex items-center justify-center"
+                className="w-full h-full p-2 text-cyan-400 cursor-grab active:cursor-grabbing text-4xl font-bold flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-[100%] [&>svg]:max-h-[100%]"
                 dangerouslySetInnerHTML={{ __html: piece }} 
               />
             )}
@@ -144,7 +144,7 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
             onDragStart={(e) => handleDragStart(e, 'available', i)}
             className="w-24 h-24 bg-black/40 border border-pink-500/50 rounded-lg flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-pink-500/20 transition-colors shadow-[0_0_10px_rgba(255,0,255,0.2)]"
           >
-            <div className="w-full h-full p-2 text-pink-400 pointer-events-none text-4xl font-bold flex items-center justify-center" dangerouslySetInnerHTML={{ __html: piece }} />
+            <div className="w-full h-full p-2 text-pink-400 pointer-events-none text-4xl font-bold flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-[100%] [&>svg]:max-h-[100%]" dangerouslySetInnerHTML={{ __html: piece }} />
           </div>
         ))}
         {availablePieces.length === 0 && (
