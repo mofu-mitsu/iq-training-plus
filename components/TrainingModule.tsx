@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useStore } from "../lib/store";
 import { User } from "firebase/auth";
 import { saveScore } from "../lib/firebase";
