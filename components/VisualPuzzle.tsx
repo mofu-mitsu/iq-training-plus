@@ -132,7 +132,7 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
             <DroppableSlot 
               key={`drop-slot-${i}`} 
               id={`slot-${i}`} 
-              className="w-32 h-32 bg-black/40 border-2 border-dashed border-cyan-500/30 rounded-lg flex items-center justify-center transition-all"
+              className="w-32 h-32 bg-black/40 border-2 border-dashed border-cyan-500/30 rounded-lg flex items-center justify-center transition-colors"
             >
               {piece && (
                 <DraggablePiece 
@@ -155,7 +155,7 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
               key={`avail-${i}`}
               id={`avail-${i}`}
               piece={piece}
-              className="w-24 h-24 bg-black/40 border border-pink-500/50 rounded-lg flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-pink-500/20 transition-all shadow-[0_0_10px_rgba(255,0,255,0.2)] text-pink-400 text-4xl font-bold"
+              className="w-24 h-24 bg-black/40 border border-pink-500/50 rounded-lg flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-pink-500/20 transition-colors shadow-[0_0_10px_rgba(255,0,255,0.2)] text-pink-400 text-4xl font-bold"
             />
           ))}
           {availablePieces.length === 0 && (
@@ -168,7 +168,7 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
         <button 
           onClick={handleDecide}
           disabled={!isFull}
-          className={`px-10 py-4 rounded-xl text-white font-bold text-xl transition-all shadow-[0_0_15px_#f0f] ${isFull ? 'bg-pink-500 hover:bg-pink-400' : 'bg-slate-700 opacity-50 cursor-not-allowed shadow-none'}`}
+          className={`px-10 py-4 rounded-xl text-white font-bold text-xl transition-colors shadow-[0_0_15px_#f0f] ${isFull ? 'bg-pink-500 hover:bg-pink-400' : 'bg-slate-700 opacity-50 cursor-not-allowed shadow-none'}`}
         >
           決定
         </button>

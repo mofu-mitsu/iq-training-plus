@@ -119,7 +119,7 @@ export default function BlockDesign({ target, onComplete }: BlockDesignProps) {
             <DroppableSlot 
               key={`drop-slot-${i}`} 
               id={`slot-${i}`} 
-              className="w-full h-full bg-black/40 border border-dashed border-cyan-500/30 flex items-center justify-center transition-all"
+              className="w-full h-full bg-black/40 border border-dashed border-cyan-500/30 flex items-center justify-center transition-colors"
             >
               {piece === '■' && (
                 <DraggableBlock 
@@ -153,7 +153,7 @@ export default function BlockDesign({ target, onComplete }: BlockDesignProps) {
         <button 
           onClick={handleDecide}
           disabled={availableBlocks > 0}
-          className={`px-10 py-4 rounded-xl text-white font-bold text-xl transition-all shadow-[0_0_15px_#f0f] ${availableBlocks === 0 ? 'bg-pink-500 hover:bg-pink-400' : 'bg-slate-700 opacity-50 cursor-not-allowed shadow-none'}`}
+          className={`px-10 py-4 rounded-xl text-white font-bold text-xl transition-colors shadow-[0_0_15px_#f0f] ${availableBlocks === 0 ? 'bg-pink-500 hover:bg-pink-400' : 'bg-slate-700 opacity-50 cursor-not-allowed shadow-none'}`}
         >
           完成！
         </button>
