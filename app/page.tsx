@@ -73,6 +73,7 @@ export default function Home() {
     const today = new Date().toDateString();
     if (lastLogin !== today) {
       localStorage.setItem('lastLoginDate', today);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowStamp(true);
       if (soundEnabled) audio?.playSuccess();
       // 3秒後にスタンプモーダルを消す

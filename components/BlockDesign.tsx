@@ -50,13 +50,15 @@ export default function BlockDesign({ target, onComplete }: BlockDesignProps) {
   const [availableBlocks, setAvailableBlocks] = useState<number>(totalBlocks);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSlots(Array(9).fill(null));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAvailableBlocks(totalBlocks);
   }, [target, totalBlocks]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } })
+    useSensor(TouchSensor, { activationConstraint: { distance: 5 } })
   );
 
   const handleDragEnd = (event: DragEndEvent) => {

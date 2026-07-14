@@ -161,7 +161,7 @@ export default function TrainingModule({
     return q;
   };
 
-  const setupNextQuestion = () => {
+  const setupNextQuestion = useCallback(() => {
     if (currentQIndex >= localQuestionCount) {
       finishGame();
       return;
@@ -345,7 +345,7 @@ export default function TrainingModule({
       setQuestionData(getRandomUnique(comprehensionQuestions, questionData));
     } else if (nextGameId === "matrix-reasoning") {
       const q = getRandomUnique(matrixReasoningQuestions, questionData);
-      setQuestionData({ text: q.text, options: [...q.options].sort(()=>Math.random()-0.5), answer: q.answer || q.a, explanation: q.explanation });
+      setQuestionData({ text: q.text, options: q.options ? [...q.options].sort(()=>Math.random()-0.5) : undefined, answer: q.answer || q.a, answers: q.answers, explanation: q.explanation });
     } else if (nextGameId === "information") {
       setQuestionData(getRandomUnique(informationQuestions, questionData));
     } else if (nextGameId === "symbol-search") {
@@ -365,7 +365,7 @@ export default function TrainingModule({
       setQuestionData({ text: q.text, grid: q.grid, options: [...q.options].sort(()=>Math.random()-0.5), answer: q.answer || q.a, explanation: q.explanation });
     } else if (nextGameId === "puzzle") {
       const q = puzzleQuestions[Math.floor(Math.random() * puzzleQuestions.length)];
-      setQuestionData({ text: q.text, options: [...q.options].sort(()=>Math.random()-0.5), answer: q.answer || q.a, answers: q.answers, explanation: q.explanation });
+      setQuestionData({ text: q.text, options: q.options ? [...q.options].sort(()=>Math.random()-0.5) : undefined, answer: q.answer || q.a, answers: q.answers, explanation: q.explanation });
     } else if (nextGameId === "coding") {
       const numSymbols = 4;
       const symbolsList = ["★", "●", "▲", "■", "◆", "♥", "♣", "♠"];
@@ -558,9 +558,9 @@ export default function TrainingModule({
         text: `${nextGameId} のテスト問題です。準備ができたら完了ボタンを押してください。`,
       });
     }
-  };
+  }, [currentQIndex, gameId, questionData, ALL_GAMES]);
 
-  const startGame = () => {
+  function startGame() {
     setGameState("playing");
     setScore(0);
     setCurrentQIndex(0);
@@ -568,7 +568,7 @@ export default function TrainingModule({
     setTimeout(setupNextQuestion, 100);
   };
 
-  const finishGame = () => {
+  function finishGame() {
     setGameState("finished");
         
     fetch('/api/rakuten?keyword=' + encodeURIComponent('脳トレ'))
@@ -605,7 +605,7 @@ export default function TrainingModule({
     }
   };
 
-  const handleAnswer = (answer: string) => {
+  function handleAnswer(answer: string) {
     let isCorrect = false;
     let correctAnswerStr = "";
     let questionText = "";
@@ -630,14 +630,9 @@ export default function TrainingModule({
       if (answer === correctAnswerStr) isCorrect = true;
       questionText = `ターゲット記号を見つけてください: ${questionData.target}`;
     } else if (currentGameId === 'visual-puzzle' && questionData) {
-      if (questionData.keywords) {
-        isCorrect = questionData.keywords.some((kw: string) => answer.includes(kw));
-        correctAnswerStr = questionData.keywords.join(" または ");
-      } else {
-        isCorrect = answer === "true";
-        correctAnswerStr = "正解の絵";
-      }
-      questionText = "絵を完成させてください";
+      isCorrect = answer === "true";
+      correctAnswerStr = questionData.targetName || "正解の絵";
+      questionText = questionData.targetName ? `「${questionData.targetName}」を完成させてください` : "絵を完成させてください";
     } else if (questionData) {
       questionText = questionData.target
         ? `${questionData.text}\n${questionData.target}`
@@ -693,7 +688,7 @@ export default function TrainingModule({
     }
   };
 
-  const fireConfetti = () => {
+  function fireConfetti() {
     import("canvas-confetti").then((confetti) => {
       confetti.default({
         particleCount: 100,
@@ -887,7 +882,7 @@ export default function TrainingModule({
                     </div>
                     {currentGameId === "pattern" && questionData.grid && (
                       <div className="grid grid-cols-3 gap-2 bg-white/10 p-4 rounded-xl w-64 h-64 border border-cyan-500/30 shadow-[0_0_20px_rgba(0,243,255,0.1)]">
-                        {questionData.grid.map((cell: string, idx: number) => (
+                        {questionData.grid.map((cell, idx) => (
                           <div
                             key={idx}
                             className={`flex items-center justify-center text-4xl font-bold rounded-lg ${
@@ -923,7 +918,8 @@ export default function TrainingModule({
                         dangerouslySetInnerHTML={{ __html: questionData.svg }}
                       />
                     )}
-                                        {currentGameId === "block-design" &&
+                    
+                    {currentGameId === "block-design" &&
                       questionData.target && (
                         <div className="text-4xl text-cyan-400 whitespace-pre font-mono leading-none tracking-widest my-4 border-2 border-cyan-500/50 p-6 rounded-2xl bg-black/30 shadow-[0_0_20px_rgba(0,243,255,0.2)]">
                           {questionData.target}
@@ -937,35 +933,16 @@ export default function TrainingModule({
                       />
                     )}
                     {currentGameId === 'block-design' ? null : currentGameId === 'visual-puzzle' ? (
-                      <div className="w-full flex flex-col items-center">
+                      <div className="w-full flex flex-col items-center gap-4">
+                        <div className="text-xl md:text-2xl text-cyan-400 font-bold mb-4">
+                          {questionData.targetName ? `「${questionData.targetName}」を完成させてください` : questionData.text}
+                        </div>
                         <VisualPuzzle 
                           pieces={questionData.pieces}
                           correctOrder={questionData.correctOrder}
                           cols={questionData.cols}
-                          onComplete={(isCorrect) => {
-                            if (isCorrect) setPuzzleSolved(true);
-                          }}
+                          onComplete={(isCorrect) => handleAnswer(isCorrect ? "true" : "false")}
                         />
-                        {puzzleSolved && (
-                          <div className="flex flex-col gap-4 mt-8 w-full max-w-md animate-in fade-in zoom-in duration-300">
-                            <div className="text-xl text-cyan-400 font-bold">この絵は何ですか？</div>
-                            <input
-                              type="text"
-                              autoFocus
-                              value={userInput}
-                              onChange={(e) => setUserInput(e.target.value)}
-                              onKeyDown={(e) => e.key === "Enter" && (handleAnswer(userInput), setUserInput(""))}
-                              className="bg-black/50 border-2 border-cyan-500 rounded-2xl p-4 text-2xl text-center outline-none text-white focus:shadow-[0_0_20px_#0ff]"
-                              placeholder="回答を入力..."
-                            />
-                            <button
-                              onClick={() => { handleAnswer(userInput); setUserInput(""); }}
-                              className="px-8 py-4 rounded-xl bg-pink-500 text-white font-bold hover:bg-pink-400 shadow-[0_0_15px_#f0f] transition-all text-xl"
-                            >
-                              決定
-                            </button>
-                          </div>
-                      )}
                       </div>
                     ) : questionData.options && currentGameId !== 'block-design' ? (
                         <div className="flex flex-wrap justify-center gap-4 mt-8">
