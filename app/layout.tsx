@@ -21,7 +21,6 @@ export const metadata: Metadata = {
     description: '記憶力、論理的思考、空間認知など、知能の様々な側面を鍛える無料の総合IQトレーニングアプリ。',
     images: ['https://iq-training-plus.vercel.app/ogp.png'],
   },
-  
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
