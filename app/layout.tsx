@@ -27,6 +27,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
         <html lang="en">
       <head>
+        <link rel="icon" href="/icon.svg" />
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-GNTX973GET"></script>
         <script
           dangerouslySetInnerHTML={{

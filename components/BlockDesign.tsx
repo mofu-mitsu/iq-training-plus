@@ -48,8 +48,10 @@ export default function BlockDesign({ target, onComplete }: BlockDesignProps) {
   
   const [slots, setSlots] = useState<(string | null)[]>(Array(9).fill(null));
   const [availableBlocks, setAvailableBlocks] = useState<number>(totalBlocks);
+  const [isDeciding, setIsDeciding] = useState(false);
 
   useEffect(() => {
+    setIsDeciding(false);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSlots(Array(9).fill(null));
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -101,6 +103,7 @@ export default function BlockDesign({ target, onComplete }: BlockDesignProps) {
   };
 
   const handleDecide = () => {
+    setIsDeciding(true);
     const currentPattern = slots.map(s => s === '■' ? '■' : '□').join('');
     const targetPattern = targetArray.join('');
     onComplete(currentPattern === targetPattern);
@@ -152,10 +155,10 @@ export default function BlockDesign({ target, onComplete }: BlockDesignProps) {
 
         <button 
           onClick={handleDecide}
-          disabled={availableBlocks > 0}
-          className={`px-10 py-4 rounded-xl text-white font-bold text-xl transition-colors shadow-[0_0_15px_#f0f] ${availableBlocks === 0 ? 'bg-pink-500 hover:bg-pink-400' : 'bg-slate-700 opacity-50 cursor-not-allowed shadow-none'}`}
+          disabled={availableBlocks > 0 || isDeciding}
+          className={`px-10 py-4 rounded-xl text-white font-bold text-xl transition-colors shadow-[0_0_15px_#f0f] ${availableBlocks === 0 && !isDeciding ? 'bg-pink-500 hover:bg-pink-400' : 'bg-slate-700 opacity-50 cursor-not-allowed shadow-none'}`}
         >
-          完成！
+          {isDeciding ? '判定中...' : '完成！'}
         </button>
       </div>
     </DndContext>

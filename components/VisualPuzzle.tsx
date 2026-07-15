@@ -17,16 +17,18 @@ type VisualPuzzleProps = {
   onComplete: (isCorrect: boolean) => void;
 };
 
-function DraggablePiece({ id, piece, className }: { id: string, piece: string, className?: string }) {
+function DraggablePiece({ id, piece, className, rotation, onRotate }: { id: string, piece: string, className?: string, rotation?: number, onRotate?: () => void }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id,
-    data: { piece }
+    data: { piece: { id, content: piece, rotation: rotation || 0 } }
   });
   
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
     zIndex: 50,
   } : undefined;
+  
+  const [clickStart, setClickStart] = useState(0);
 
   return (
     <div 
@@ -35,10 +37,17 @@ function DraggablePiece({ id, piece, className }: { id: string, piece: string, c
       {...listeners} 
       {...attributes}
       className={`touch-none ${isDragging ? 'opacity-50 scale-105' : ''} ${className}`}
+      onPointerDown={() => setClickStart(Date.now())}
+      onPointerUp={(e) => {
+        if (Date.now() - clickStart < 200 && !isDragging && onRotate) {
+          onRotate();
+        }
+      }}
     >
       <div 
-        className="w-full h-full p-2 pointer-events-none flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-[100%] [&>svg]:max-h-[100%]" 
-        dangerouslySetInnerHTML={{ __html: piece.replace('<svg ', '<svg class="w-full h-full" ') }} 
+        className="w-full h-full p-2 pointer-events-none flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-[100%] [&>svg]:max-h-[100%] transition-transform duration-200" 
+        style={{ transform: `rotate(${rotation || 0}deg)` }}
+        dangerouslySetInnerHTML={{ __html: (piece || '').replace('<svg ', '<svg class="w-full h-full" ') }} 
       />
     </div>
   );
@@ -54,13 +63,22 @@ function DroppableSlot({ id, children, className }: { id: string, children?: Rea
   );
 }
 
+export type PieceData = { id: string, content: string, rotation: number };
+
 export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 2 }: VisualPuzzleProps) {
-  const [slots, setSlots] = useState<(string | null)[]>(Array(pieces.length).fill(null));
-  const [availablePieces, setAvailablePieces] = useState<string[]>([]);
+  const [slots, setSlots] = useState<(PieceData | null)[]>(Array(pieces.length).fill(null));
+  const [availablePieces, setAvailablePieces] = useState<PieceData[]>([]);
+  const [isDeciding, setIsDeciding] = useState(false);
   
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAvailablePieces([...pieces].sort(() => Math.random() - 0.5));
+    setIsDeciding(false);
+    const initialPieces = pieces.map((p, i) => ({
+      id: `piece-${i}`,
+      content: p,
+      rotation: Math.floor(Math.random() * 4) * 90
+    })).sort(() => Math.random() - 0.5);
+    setAvailablePieces(initialPieces);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSlots(Array(pieces.length).fill(null));
   }, [pieces]);
@@ -76,7 +94,7 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
 
     const sourceId = active.id as string;
     const targetId = over.id as string;
-    const draggedPiece = active.data.current?.piece as string;
+    const draggedPiece = active.data.current?.piece as PieceData;
 
     const newSlots = [...slots];
     const newAvailable = [...availablePieces];
@@ -112,8 +130,9 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
   };
 
   const handleDecide = () => {
-    const validSlots = slots.filter(s => s !== null);
-    const isCorrect = validSlots.length === correctOrder.length && validSlots.every((s, i) => s === correctOrder[i]);
+    setIsDeciding(true);
+    const validSlots = slots.filter(s => s !== null) as PieceData[];
+    const isCorrect = validSlots.length === correctOrder.length && validSlots.every((s, i) => s.content === correctOrder[i] && s.rotation % 360 === 0);
     onComplete(isCorrect);
   };
 
@@ -122,8 +141,13 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto">
-        <div className="text-lg md:text-xl text-slate-300 font-bold mb-4">
-          下のピースをドラッグして、枠にはめ込んで絵を完成させてください。
+        <div className="text-center mb-4">
+          <div className="text-lg md:text-xl text-slate-300 font-bold mb-1">
+            下のピースをドラッグして、枠にはめ込んで絵を完成させてください。
+          </div>
+          <div className="text-sm md:text-base text-pink-300 font-bold">
+            ※ピースをタップすると回転します
+          </div>
         </div>
         
         {/* Grid */}
@@ -136,8 +160,14 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
             >
               {piece && (
                 <DraggablePiece 
-                  id={`slot-${i}-piece`} 
-                  piece={piece} 
+                  id={`slot-${i}-piece`}
+                  piece={piece.content}
+                  rotation={piece.rotation}
+                  onRotate={() => {
+                    const newSlots = [...slots];
+                    if (newSlots[i]) newSlots[i] = { ...newSlots[i]!, rotation: newSlots[i]!.rotation + 90 };
+                    setSlots(newSlots);
+                  }}
                   className="w-full h-full text-cyan-400 cursor-grab active:cursor-grabbing text-4xl font-bold flex items-center justify-center" 
                 />
               )}
@@ -154,8 +184,14 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
             <DraggablePiece 
               key={`avail-${i}`}
               id={`avail-${i}`}
-              piece={piece}
-              className="w-24 h-24 bg-black/40 border border-pink-500/50 rounded-lg flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-pink-500/20 transition-colors shadow-[0_0_10px_rgba(255,0,255,0.2)] text-pink-400 text-4xl font-bold"
+              piece={piece.content}
+              rotation={piece.rotation}
+              onRotate={() => {
+                const newAvail = [...availablePieces];
+                newAvail[i] = { ...newAvail[i], rotation: newAvail[i].rotation + 90 };
+                setAvailablePieces(newAvail);
+              }}
+              className="w-24 h-24 bg-black/40 border border-pink-500/50 rounded-lg flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-pink-500/20 shadow-[0_0_10px_rgba(255,0,255,0.2)] text-pink-400 text-4xl font-bold"
             />
           ))}
           {availablePieces.length === 0 && (
@@ -167,10 +203,10 @@ export default function VisualPuzzle({ pieces, correctOrder, onComplete, cols = 
 
         <button 
           onClick={handleDecide}
-          disabled={!isFull}
-          className={`px-10 py-4 rounded-xl text-white font-bold text-xl transition-colors shadow-[0_0_15px_#f0f] ${isFull ? 'bg-pink-500 hover:bg-pink-400' : 'bg-slate-700 opacity-50 cursor-not-allowed shadow-none'}`}
+          disabled={!isFull || isDeciding}
+          className={`px-10 py-4 rounded-xl text-white font-bold text-xl transition-colors shadow-[0_0_15px_#f0f] ${isFull && !isDeciding ? 'bg-pink-500 hover:bg-pink-400' : 'bg-slate-700 opacity-50 cursor-not-allowed shadow-none'}`}
         >
-          決定
+          {isDeciding ? '判定中...' : '決定'}
         </button>
       </div>
     </DndContext>
