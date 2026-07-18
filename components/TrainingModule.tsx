@@ -186,7 +186,8 @@ export default function TrainingModule({
     setDisplayIndex(-1);
 
     if (nextGameId.startsWith("digit-span")) {
-      const newSeq = generateDigitSpan(3 + Math.floor(currentQIndex / 2));
+      const length = Math.min(3 + Math.floor(currentQIndex / 2), 10);
+      const newSeq = generateDigitSpan(length);
       setSequence(newSeq);
       setDisplayIndex(-2); // 準備中
 
@@ -584,7 +585,7 @@ export default function TrainingModule({
     }
     recordPlaySession();
     if (user) {
-      saveScore(user.uid, score, questionCount, 0).catch(console.error);
+      saveScore(user.uid, score, localQuestionCount, 0).catch(console.error);
     }
     const gasUrl = "https://script.google.com/macros/s/AKfycbxJKfKT3_zlZTc_Rg9kRrUj7xqBE21tAbEf98dQyBfpN9QvLZ18p--b9q3TMnUD6wc84Q/exec";
     if (gasUrl) {
@@ -633,6 +634,10 @@ export default function TrainingModule({
       isCorrect = answer === "true";
       correctAnswerStr = questionData.targetName || "正解の絵";
       questionText = questionData.targetName ? `「${questionData.targetName}」を完成させてください` : "絵を完成させてください";
+    } else if (currentGameId === 'block-design' && questionData) {
+      isCorrect = answer !== "incorrect";
+      correctAnswerStr = questionData.target || "正解の絵";
+      questionText = "見本と同じようにブロックを配置してください";
     } else if (questionData) {
       questionText = questionData.target
         ? `${questionData.text}\n${questionData.target}`
@@ -671,11 +676,9 @@ export default function TrainingModule({
         explanation,
       },
     ]);
-
     const nextIndex = currentQIndex + 1;
     setCurrentQIndex(nextIndex);
-
-    if (nextIndex >= questionCount) {
+    if (nextIndex >= localQuestionCount) {
       setTimeout(() => {
         finishGame();
         if (useStore.getState().level > prevLevel.current) {
@@ -927,23 +930,25 @@ export default function TrainingModule({
                       )}
                     
                     {currentGameId === 'block-design' && questionData.target && (
-                      <BlockDesign
-                        target={questionData.target}
-                        onComplete={(isCorrect) => handleAnswer(isCorrect ? questionData.target : "incorrect")}
-                      />
-                    )}
-                    {currentGameId === 'block-design' ? null : currentGameId === 'visual-puzzle' ? (
-                      <div className="w-full flex flex-col items-center gap-4">
-                        <div className="text-xl md:text-2xl text-cyan-400 font-bold mb-4">
-                          {questionData.targetName ? `「${questionData.targetName}」を完成させてください` : questionData.text}
-                        </div>
-                        <VisualPuzzle 
-                          pieces={questionData.pieces}
-                          correctOrder={questionData.correctOrder}
-                          cols={questionData.cols}
-                          onComplete={(isCorrect) => handleAnswer(isCorrect ? "true" : "false")}
-                        />
+                    <BlockDesign
+                      key={`block-design-${currentQIndex}`}
+                      target={questionData.target}
+                      onComplete={(isCorrect) => handleAnswer(isCorrect ? questionData.target : "incorrect")}
+                    />
+                  )}
+                  {currentGameId === 'block-design' ? null : currentGameId === 'visual-puzzle' ? (
+                    <div className="w-full flex flex-col items-center gap-4">
+                      <div className="text-xl md:text-2xl text-cyan-400 font-bold mb-4">
+                        {questionData.targetName ? `「${questionData.targetName}」を完成させてください` : questionData.text}
                       </div>
+                      <VisualPuzzle 
+                        key={`visual-puzzle-${currentQIndex}`}
+                        pieces={questionData.pieces}
+                        correctOrder={questionData.correctOrder}
+                        cols={questionData.cols}
+                        onComplete={(isCorrect) => handleAnswer(isCorrect ? "true" : "false")}
+                      />
+                    </div>
                     ) : questionData.options && currentGameId !== 'block-design' ? (
                         <div className="flex flex-wrap justify-center gap-4 mt-8">
                           {questionData.options.map((opt: string, i: number) => (
