@@ -79,6 +79,7 @@ export default function TrainingModule({
   const [localQuestionCount, setLocalQuestionCount] = useState(questionCount);
   const [rakutenItem, setRakutenItem] = useState<{name: string, url: string, image: string, price: number} | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isProcessingAnswer, setIsProcessingAnswer] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
   const prevLevel = useRef(useStore.getState().level);
@@ -184,9 +185,10 @@ export default function TrainingModule({
     setCurrentGameId(nextGameId);
     setUserInput("");
     setDisplayIndex(-1);
+    setIsProcessingAnswer(false);
 
     if (nextGameId.startsWith("digit-span")) {
-      const length = Math.min(3 + Math.floor(currentQIndex / 2), 10);
+      const length = Math.min(3 + Math.floor(currentQIndex / 2), 9);
       const newSeq = generateDigitSpan(length);
       setSequence(newSeq);
       setDisplayIndex(-2); // 準備中
@@ -607,6 +609,9 @@ export default function TrainingModule({
   };
 
   function handleAnswer(answer: string) {
+    if (isProcessingAnswer) return;
+    setIsProcessingAnswer(true);
+
     let isCorrect = false;
     let correctAnswerStr = "";
     let questionText = "";
